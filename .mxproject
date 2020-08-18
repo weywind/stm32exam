@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=D:/Code/stm32/xxxxxxxxxxxx/Inc
+HeaderPath=G:/repos/stm32exam/Inc
 HeaderFiles=stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;
-SourcePath=D:/Code/stm32/xxxxxxxxxxxx/Src
+SourcePath=G:/repos/stm32exam/Src
 SourceFiles=stm32f1xx_it.c;stm32f1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]
