@@ -200,9 +200,8 @@ void testString(int selected)
     }
   }
 
-  ssd1306_Fill(Black);
-  ssd1306_SetCursor(0, 3);
-  ssd1306_WriteString("2020/08/18   23:55", Font_7x10, White);
+  // ssd1306_SetCursor(0, 3);
+  // ssd1306_WriteString("2020/08/18   23:55", Font_7x10, White);
   ssd1306_SetCursor(0, 10 + 6);
 
   ssd1306_WriteString("2234567890123456", Font_7x10, color[0]);
@@ -211,5 +210,15 @@ void testString(int selected)
   ssd1306_SetCursor(4, 10 * 3 + 6);
 
   ssd1306_WriteString("42345678901234567890", Font_7x10, color[2]);
+  ssd1306_UpdateScreen();
+}
+void fillBlack()
+{
+  ssd1306_Fill(Black);
+}
+void updateDateTime(char *str)
+{
+  ssd1306_SetCursor(0, 3);
+  ssd1306_WriteString(str, Font_7x10, White);
   ssd1306_UpdateScreen();
 }

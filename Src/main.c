@@ -118,12 +118,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_RTC_GetTime(&hrtc, &GetTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &GetData, RTC_FORMAT_BIN);
-    printf("%02d/%02d/%02d\r\n", 2000 + GetData.Year, GetData.Month, GetData.Date);
-    printf("%02d:%02d:%02d\r\n", GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
-    printf("\r\n");
-    HAL_Delay(500);
 
     // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
     // HAL_Delay(500);
@@ -205,6 +199,7 @@ static void MX_I2C2_Init(void)
   }
   /* USER CODE BEGIN I2C2_Init 2 */
   ssd1306_Init();
+  fillBlack();
   testString(currentIndex);
   /* USER CODE END I2C2_Init 2 */
 }
@@ -261,7 +256,15 @@ static void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
-
+  HAL_RTC_GetTime(&hrtc, &GetTime, RTC_FORMAT_BIN);
+  HAL_RTC_GetDate(&hrtc, &GetData, RTC_FORMAT_BIN);
+  printf("%02d/%02d/%02d\r\n", 2000 + GetData.Year, GetData.Month, GetData.Date);
+  printf("%02d:%02d:%02d\r\n", GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+  printf("\r\n");
+  char str[20];
+  sprintf(str, "%02d/%02d/%02d  %02d:%02d:%02d", GetData.Year, GetData.Month, GetData.Date, GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+  updateDateTime(str);
+  HAL_RTCEx_SetSecond_IT(&hrtc);
   /* USER CODE END RTC_Init 2 */
 }
 
@@ -349,7 +352,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   HAL_UART_Transmit_IT(huart, aRxBuffer, RXBUFFERSIZE);
   HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
 }
-
+void HAL_RTCEx_RTCEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  HAL_RTC_GetTime(hrtc, &GetTime, RTC_FORMAT_BIN);
+  HAL_RTC_GetDate(hrtc, &GetData, RTC_FORMAT_BIN);
+  printf("%02d/%02d/%02d\r\n", 2000 + GetData.Year, GetData.Month, GetData.Date);
+  printf("%02d:%02d:%02d\r\n", GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+  printf("\r\n");
+  char str[20];
+  sprintf(str, "%02d/%02d/%02d  %02d:%02d:%02d", GetData.Year, GetData.Month, GetData.Date, GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+  updateDateTime(str);
+}
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   HAL_Delay(200);
@@ -358,14 +371,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
   case GPIO_PIN_0:
     mes = "up";
-    currentIndex = (currentIndex + 3) % 4;
+    currentIndex = (currentIndex + 2) % 3;
     testString(currentIndex);
     break;
   case GPIO_PIN_8:
     mes = "left";
     break;
   case GPIO_PIN_9:
-    currentIndex = (currentIndex + 5) % 4;
+    currentIndex = (currentIndex + 4) % 3;
     testString(currentIndex);
     mes = "down";
     break;

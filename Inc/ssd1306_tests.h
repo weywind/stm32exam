@@ -14,4 +14,6 @@ void ssd1306_TestPolyline(void);
 void test_circle(void);
 void writeString(char *message);
 void testString(int selected);
+void updateDateTime(char *str);
+void fillBlack(void);
 #endif // __SSD1306_TEST_H__
