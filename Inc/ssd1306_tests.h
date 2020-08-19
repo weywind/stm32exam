@@ -1,6 +1,5 @@
 #ifndef __SSD1306_TEST_H__
 #define __SSD1306_TEST_H__
-
 void ssd1306_TestBorder(void);
 void ssd1306_TestFonts(void);
 void ssd1306_TestFPS(void);
@@ -13,7 +12,6 @@ void ssd1306_TestPolyline(void);
 
 void test_circle(void);
 void writeString(char *message);
-void testString(int selected);
 void updateDateTime(char *str);
 void fillBlack(void);
 #endif // __SSD1306_TEST_H__

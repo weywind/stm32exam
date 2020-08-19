@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "ssd1306_tests.h"
 #include "stdio.h"
+#include "menu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,11 +53,10 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 uint8_t aRxBuffer[RXBUFFERSIZE];
 uint8_t message[] = "xxxxx";
-int currentIndex = 0;
+extern int menuType;
 RTC_DateTypeDef GetData;
 
 RTC_TimeTypeDef GetTime;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -200,7 +200,7 @@ static void MX_I2C2_Init(void)
   /* USER CODE BEGIN I2C2_Init 2 */
   ssd1306_Init();
   fillBlack();
-  testString(currentIndex);
+  showHome(0);
   /* USER CODE END I2C2_Init 2 */
 }
 
@@ -371,19 +371,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
   case GPIO_PIN_0:
     mes = "up";
-    currentIndex = (currentIndex + 2) % 3;
-    testString(currentIndex);
+    up();
     break;
   case GPIO_PIN_8:
     mes = "left";
+    back();
     break;
   case GPIO_PIN_9:
-    currentIndex = (currentIndex + 4) % 3;
-    testString(currentIndex);
     mes = "down";
+    down();
     break;
   case GPIO_PIN_2:
     mes = "right";
+    go();
     break;
   default:
     break;

@@ -3,6 +3,13 @@
 #include "ssd1306.h"
 #include "ssd1306_tests.h"
 
+typedef struct
+{
+  /* data */
+  int id;
+  char title[10];
+} MenuItem;
+
 void ssd1306_TestBorder()
 {
   ssd1306_Fill(Black);
@@ -185,33 +192,7 @@ void writeString(char *message)
   ssd1306_WriteString(message, Font_11x18, White);
   ssd1306_UpdateScreen();
 }
-void testString(int selected)
-{
-  SSD1306_COLOR color[3] = {White, White, White};
-  for (int i = 0; i < 3; i++)
-  {
-    if (i == selected)
-    {
-      color[i] = Black;
-    }
-    else
-    {
-      color[i] = White;
-    }
-  }
 
-  // ssd1306_SetCursor(0, 3);
-  // ssd1306_WriteString("2020/08/18   23:55", Font_7x10, White);
-  ssd1306_SetCursor(0, 10 + 6);
-
-  ssd1306_WriteString("2234567890123456", Font_7x10, color[0]);
-  ssd1306_SetCursor(0, 10 * 2 + 6);
-  ssd1306_WriteString("3234567890123456", Font_7x10, color[1]);
-  ssd1306_SetCursor(4, 10 * 3 + 6);
-
-  ssd1306_WriteString("42345678901234567890", Font_7x10, color[2]);
-  ssd1306_UpdateScreen();
-}
 void fillBlack()
 {
   ssd1306_Fill(Black);
