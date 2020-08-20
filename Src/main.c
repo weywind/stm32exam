@@ -200,7 +200,8 @@ static void MX_I2C2_Init(void)
   /* USER CODE BEGIN I2C2_Init 2 */
   ssd1306_Init();
   fillBlack();
-  showHome(0);
+  init();
+  showMenu();
   /* USER CODE END I2C2_Init 2 */
 }
 
@@ -262,7 +263,7 @@ static void MX_RTC_Init(void)
   printf("%02d:%02d:%02d\r\n", GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
   printf("\r\n");
   char str[20];
-  sprintf(str, "%02d/%02d/%02d  %02d:%02d:%02d", GetData.Year, GetData.Month, GetData.Date, GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+  sprintf(str, "%02d/%02d/%02d  %02d:%02d:%02d  ", GetData.Year, GetData.Month, GetData.Date, GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
   updateDateTime(str);
   HAL_RTCEx_SetSecond_IT(&hrtc);
   /* USER CODE END RTC_Init 2 */
@@ -356,34 +357,55 @@ void HAL_RTCEx_RTCEventCallback(RTC_HandleTypeDef *hrtc)
 {
   HAL_RTC_GetTime(hrtc, &GetTime, RTC_FORMAT_BIN);
   HAL_RTC_GetDate(hrtc, &GetData, RTC_FORMAT_BIN);
-  printf("%02d/%02d/%02d\r\n", 2000 + GetData.Year, GetData.Month, GetData.Date);
-  printf("%02d:%02d:%02d\r\n", GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
-  printf("\r\n");
+  // printf("%02d/%02d/%02d\r\n", 2000 + GetData.Year, GetData.Month, GetData.Date);
+  // printf("%02d:%02d:%02d\r\n", GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+  // printf("\r\n");
   char str[20];
-  sprintf(str, "%02d/%02d/%02d  %02d:%02d:%02d", GetData.Year, GetData.Month, GetData.Date, GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+  sprintf(str, "%02d/%02d/%02d  %02d:%02d:%02d  ", GetData.Year, GetData.Month, GetData.Date, GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
   updateDateTime(str);
 }
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   HAL_Delay(200);
   uint8_t *mes;
+  extern int inHandler;
   switch (GPIO_Pin)
   {
   case GPIO_PIN_0:
     mes = "up";
-    up();
+    if (inHandler > 0)
+    {
+      handleCLick(3);
+    }
+    else
+      up();
     break;
   case GPIO_PIN_8:
     mes = "left";
-    back();
+    if (inHandler > 0)
+    {
+      handleCLick(2);
+    }
+    else
+      back();
     break;
   case GPIO_PIN_9:
     mes = "down";
-    down();
+    if (inHandler > 0)
+    {
+      handleCLick(4);
+    }
+    else
+      down();
     break;
   case GPIO_PIN_2:
     mes = "right";
-    go();
+    if (inHandler > 0)
+    {
+      handleCLick(1);
+    }
+    else
+      go();
     break;
   default:
     break;
