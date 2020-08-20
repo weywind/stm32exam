@@ -57,6 +57,7 @@ extern int menuType;
 RTC_DateTypeDef GetData;
 
 RTC_TimeTypeDef GetTime;
+int beep = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -266,6 +267,7 @@ static void MX_RTC_Init(void)
   sprintf(str, "%02d/%02d/%02d  %02d:%02d:%02d  ", GetData.Year, GetData.Month, GetData.Date, GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
   updateDateTime(str);
   HAL_RTCEx_SetSecond_IT(&hrtc);
+  RTC_AlarmTypeDef test;
   /* USER CODE END RTC_Init 2 */
 }
 
@@ -316,6 +318,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -333,6 +338,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 2, 2);
@@ -364,8 +376,21 @@ void HAL_RTCEx_RTCEventCallback(RTC_HandleTypeDef *hrtc)
   sprintf(str, "%02d/%02d/%02d  %02d:%02d:%02d  ", GetData.Year, GetData.Month, GetData.Date, GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
   updateDateTime(str);
 }
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
+{
+
+  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
+  beep = 1;
+  printf("\r\nalarm\r\n");
+}
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+  if (beep)
+  {
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
+    beep = 0;
+    return;
+  }
   HAL_Delay(200);
   uint8_t *mes;
   extern int inHandler;
