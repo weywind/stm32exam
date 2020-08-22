@@ -26,6 +26,7 @@
 #include "ssd1306_tests.h"
 #include "stdio.h"
 #include "menu.h"
+#include "w25qxx.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,16 +49,33 @@ I2C_HandleTypeDef hi2c2;
 
 RTC_HandleTypeDef hrtc;
 
+SPI_HandleTypeDef hspi2;
+
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-uint8_t aRxBuffer[RXBUFFERSIZE];
-uint8_t message[] = "xxxxx";
 extern int menuType;
 RTC_DateTypeDef GetData;
 
 RTC_TimeTypeDef GetTime;
 int beep = 0;
+volatile int needRead = 0;
+uint16_t pageAddr = 10;
+volatile int isOperation = 0;
+
+volatile uint8_t aRxBuffer;
+uint8_t buffer[256] = {0};
+volatile uint8_t bufferCount = 0;
+volatile uint8_t startCount = 0;
+volatile uint8_t stopCount = 0;
+volatile uint32_t pageIndex = 20;
+volatile uint32_t startPage = 20;
+volatile uint32_t endPage = 20;
+volatile uint32_t currentPage = 0;
+volatile int inTransfer = 0;
+volatile int stop = 0;
+volatile int xxxx = 0;
+uint8_t totalPage = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,6 +84,7 @@ static void MX_GPIO_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_RTC_Init(void);
+static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -77,6 +96,18 @@ int fputc(int ch, FILE *f)
   uint8_t temp[1] = {ch};
   HAL_UART_Transmit(&huart1, temp, 1, 2);
   return ch;
+}
+void write(){
+	isOperation = 1;
+	 W25qxx_ErasePage(pageIndex);
+   W25qxx_WritePage(buffer, pageIndex, 10, 0);
+	 pageIndex++;
+	 W25qxx_ErasePage(5);
+	 W25qxx_WritePage((uint8_t*)&pageIndex, 5, 10, 1);
+	 isOperation = 0;
+};
+void read(){
+		W25qxx_ReadPage(buffer,10,10,0);
 }
 /* USER CODE END 0 */
 
@@ -111,8 +142,14 @@ int main(void)
   MX_I2C2_Init();
   MX_USART1_UART_Init();
   MX_RTC_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Transmit_IT(&huart1, message, sizeof(message));
+	printf("xxx");
+  uint8_t ms[] = {"Hello World!"};
+	W25qxx_ErasePage(0);
+	W25qxx_WritePage(ms,10,10,0);
+	W25qxx_ReadPage(buffer,10,10,0);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,6 +157,17 @@ int main(void)
   while (1)
   {
 
+		if(bufferCount==245)
+			{
+			if(stop){
+				bufferCount = 0;
+			}
+			printf(buffer);
+			write();
+			HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer, 1);
+			}else{
+				HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer, 1);
+			}
     // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
     // HAL_Delay(500);
     /* USER CODE END WHILE */
@@ -272,6 +320,43 @@ static void MX_RTC_Init(void)
 }
 
 /**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_ENABLE;
+  hspi2.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+  W25qxx_Init();
+  /* USER CODE END SPI2_Init 2 */
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -287,7 +372,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 9600;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -319,13 +404,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12 | GPIO_PIN_8, GPIO_PIN_SET);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PC8 PC9 */
   GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9;
@@ -360,10 +452,36 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  UNUSED(huart);
-  writeString(aRxBuffer);
-  HAL_UART_Transmit_IT(huart, aRxBuffer, RXBUFFERSIZE);
-  HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
+ if (inTransfer)
+  {
+    if(bufferCount>=246){
+			bufferCount=0;
+		}else{
+			buffer[bufferCount]=aRxBuffer;
+			bufferCount++;
+		}
+  }
+
+
+	if(stopCount ==3){
+		stopCount = 0;
+
+		for (int i = bufferCount-4; i < 246; i++)
+    {
+      buffer[i] = 0x00;
+			bufferCount++;
+    }
+		inTransfer=0;
+		bufferCount = 245;
+		stop = 1;
+	}
+  if (aRxBuffer == 'x')
+  {
+    stopCount++;
+  }else{
+		stopCount=0;
+	}
+
 }
 void HAL_RTCEx_RTCEventCallback(RTC_HandleTypeDef *hrtc)
 {

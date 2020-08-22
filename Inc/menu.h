@@ -7,3 +7,5 @@ void init();
 void showMenu();
 void handleCLick(int btn);
 void about(int btn);
+void showStorageDisplay();
+void readTextDisplay();
